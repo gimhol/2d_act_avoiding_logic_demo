@@ -54,10 +54,10 @@ function main() {
 
   const update = (dt: number): void => {
     ctx.lineWidth = 2;
-    const min_x = 0;
-    const min_y = 0;
-    const max_x = canvas.width = 500;
-    const max_y = canvas.height = 500;
+    const min_x = 25;
+    const min_y = 25;
+    const max_x = canvas.width = 450;
+    const max_y = canvas.height = 450;
     avoider.render(ctx);
     player.render(ctx);
 
@@ -77,7 +77,6 @@ function main() {
       const head_force_length = edge_pos.sub(avoider.pos).mag();
       const tail_force_length = force_vector.mag() - head_force_length;
       const tail_force_vector = force_vector.reflect(danger_top.perpendicular).normalize().mult(tail_force_length);
-
       const out_end_pos = edge_pos.add(tail_force_vector);
       line(edge_pos.x, edge_pos.y, out_end_pos.x, out_end_pos.y, dv.mag() < 100 ? 'red' : 'green');
       arrow(out_end_pos, tail_force_vector.normalize(), dv.mag() < 100 ? 'red' : 'green');
