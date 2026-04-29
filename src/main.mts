@@ -17,9 +17,9 @@ function main() {
     ctx.stroke();
   }
 
-  function arrow(ed: Vector2, ndv: Vector2, fillStyle: string): void {
+  function arrow(ed: Vector2, ndv: Vector2, color: string): void {
     if (!ctx) return;
-    ctx.fillStyle = fillStyle;
+    ctx.strokeStyle = color;
     const arrowLength = 10;
     const arrowWidth = 5;
     const leftX = ed.x - ndv.x * arrowLength - ndv.y * arrowWidth;
@@ -27,11 +27,10 @@ function main() {
     const rightX = ed.x - ndv.x * arrowLength + ndv.y * arrowWidth;
     const rightY = ed.y - ndv.y * arrowLength - ndv.x * arrowWidth;
     ctx.beginPath();
-    ctx.moveTo(ed.x, ed.y);
-    ctx.lineTo(leftX, leftY);
+    ctx.moveTo(leftX, leftY);
+    ctx.lineTo(ed.x, ed.y);
     ctx.lineTo(rightX, rightY);
-    ctx.closePath();
-    ctx.fill();
+    ctx.stroke();
   }
 
   const avoider = new Creature();
@@ -61,10 +60,16 @@ function main() {
     avoider.render(ctx);
     player.render(ctx);
 
-    const dv = avoider.pos.sub(player.pos);
-    const ndv = avoider.pos.sub(player.pos).normalize();
-    const endpoint = player.pos.add(ndv.mult(200));
-    const cd = endpoint.add(dv.sub(ndv.mult(200)));
+    const diff_vector = avoider.pos.sub(player.pos);
+    const diff_vector_n = diff_vector.normalize();
+
+
+
+
+
+    
+    const endpoint = player.pos.add(diff_vector_n.mult(200));
+    const cd = endpoint.add(diff_vector.sub(diff_vector_n.mult(200)));
     const edge_pos = Vector2.intersect(
       avoider.pos,
       endpoint,
@@ -73,18 +78,12 @@ function main() {
     );
 
     let force_vector = endpoint.sub(avoider);
-    if (edge_pos) {
-      const head_force_length = edge_pos.sub(avoider.pos).mag();
-      const tail_force_length = force_vector.mag() - head_force_length;
-      const tail_force_vector = force_vector.reflect(danger_top.perpendicular).normalize().mult(tail_force_length);
-      const out_end_pos = edge_pos.add(tail_force_vector);
-      line(edge_pos.x, edge_pos.y, out_end_pos.x, out_end_pos.y, dv.mag() < 100 ? 'red' : 'green');
-      arrow(out_end_pos, tail_force_vector.normalize(), dv.mag() < 100 ? 'red' : 'green');
-    }
-
     let move_vector: Vector2;
     let move_speed = 200;
-    if (dv.mag() < 100) {
+
+
+
+    if (diff_vector.mag() < 100) {
       move_vector = endpoint.sub(avoider);
       line(player.x, player.y, avoider.x, avoider.y, '#333333');
       line(avoider.x, avoider.y, endpoint.x, endpoint.y, 'red');
@@ -97,7 +96,22 @@ function main() {
       line(endpoint.x, endpoint.y, avoider.x, avoider.y, '#00000022');
       move_vector = new Vector2();
     }
-    arrow(endpoint, ndv, dv.mag() > 100 ? '#333333' : 'red');
+    arrow(endpoint, diff_vector_n, diff_vector.mag() > 100 ? '#333333' : 'red');
+
+
+
+    if (edge_pos) {
+      const head_force_length = edge_pos.sub(avoider.pos).mag();
+      const head_force = force_vector.normalize().mult(head_force_length);
+      const tail_force_length = force_vector.mag() - head_force_length;
+      const tail_force_vector = force_vector.reflect(danger_top.perpendicular).normalize().mult(tail_force_length);
+      const out_end_pos = edge_pos.add(tail_force_vector);
+      ctx.setLineDash([2, 2])
+      line(avoider.x, avoider.y, edge_pos.x, edge_pos.y, diff_vector.mag() < 100 ? 'red' : 'green');
+      line(edge_pos.x, edge_pos.y, out_end_pos.x, out_end_pos.y, diff_vector.mag() < 100 ? 'red' : 'green');
+      arrow(out_end_pos, tail_force_vector.normalize(), diff_vector.mag() < 100 ? 'red' : 'green');
+      arrow(edge_pos, head_force.normalize(), diff_vector.mag() < 100 ? 'red' : 'green');
+    }
   };
 
   let prev_time = -1;
