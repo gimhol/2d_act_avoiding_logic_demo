@@ -2,11 +2,29 @@ export interface IVector2Like {
   x: number;
   y: number;
 }
+
 export class Vector2 implements IVector2Like {
   x: number;
   y: number;
-  static dist(v1: Vector2, v2: Vector2) {
-    return v1.sub(v2).mag();
+  static dist(v1: Readonly<IVector2Like>, v2?: Readonly<IVector2Like>) {
+    let { x, y } = v1;
+    if (v2) {
+      x -= v2.x;
+      y -= v2.y;
+    }
+    return Math.sqrt(x * x + y * y)
+  }
+  static sub(p: Readonly<IVector2Like>, ...v: Readonly<IVector2Like>[]): Vector2 {
+    return new Vector2(
+      v.reduce((r, i) => r - i.x, p.x),
+      v.reduce((r, i) => r - i.y, p.y),
+    );
+  }
+  static add(...v: Readonly<IVector2Like>[]): Vector2 {
+    return new Vector2(
+      v.reduce((r, i) => r + i.x, 0),
+      v.reduce((r, i) => r + i.y, 0),
+    );
   }
   static intersect(
     p1: IVector2Like, p2: IVector2Like,
@@ -31,56 +49,62 @@ export class Vector2 implements IVector2Like {
     }
     return null;
   }
-
-  static normal(wallStart: Vector2, wallEnd: Vector2): Vector2 {
-    const wallDir = wallEnd.sub(wallStart);
-    const normal = new Vector2(-wallDir.y, wallDir.x);
-    return normal.normalize();
-  }
-
   constructor(x: number = 0, y: number = 0) {
     this.x = x;
     this.y = y;
   }
-  add(v: IVector2Like): Vector2 {
-    return new Vector2(this.x + v.x, this.y + v.y);
+  add(v: Readonly<IVector2Like>): this {
+    this.x += v.x;
+    this.y += v.y;
+    return this;
   }
-  sub(v: IVector2Like): Vector2 {
-    return new Vector2(this.x - v.x, this.y - v.y);
+  sub(v: Readonly<IVector2Like>): Vector2 {
+    this.x -= v.x;
+    this.y -= v.y;
+    return this;
   }
-  mult(n: number): Vector2 {
-    return new Vector2(this.x * n, this.y * n);
+  mult(n: number): this {
+    this.x *= n;
+    this.y *= n;
+    return this;
   }
-  div(n: number): Vector2 {
-    return new Vector2(this.x / n, this.y / n);
+  div(n: number): this {
+    this.x /= n;
+    this.y /= n;
+    return this;
   }
-  mag(): number {
-    return Math.sqrt(this.x * this.x + this.y * this.y);
+  copy(v: Readonly<IVector2Like>): this {
+    this.x = v.x;
+    this.y = v.y;
+    return this;
   }
-  normalize(): Vector2 {
-    const m = this.mag();
-    if (m === 0) return new Vector2(0, 0);
-    return this.div(m);
-  }
-  copy(): Vector2 {
-    return new Vector2(this.x, this.y);
-  }
+
   set(x: number, y: number): Vector2 {
     this.x = x;
     this.y = y;
     return this;
   }
-  dot(v: IVector2Like): number {
+  dot(v: Readonly<IVector2Like>): number {
     return this.x * v.x + this.y * v.y;
   }
-  reflect(n: Vector2): Vector2 {
+  clone(): Vector2 { return new Vector2(this.x, this.y); }
+  mag(): number { return Math.hypot(this.x, this.y) }
+  normalize(): this {
+    const m = this.mag();
+    if (!m) {
+      this.x = 0;
+      this.y = 0;
+    } else {
+      this.x /= m
+      this.y /= m
+    }
+    return this
+  }
+  reflect(n: Readonly<IVector2Like>): this {
     const dotProduct = this.dot(n);
-    const reflection = n.mult(2 * dotProduct);
-    return this.sub(reflection);
+    this.x -= n.x * 2 * dotProduct
+    this.y -= n.y * 2 * dotProduct
+    return this;
   }
-  perpendicular(): Vector2 {
-    return new Vector2(-this.y, this.x);
-  }
-
 
 }
